@@ -648,6 +648,46 @@ mainTab:AddSwitch("Auto Sell Dual Chaos Birdies", function(state)
     end)
 end)
 
+local pets = window:AddTab("Pets")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Pet section
+pets:AddLabel("Pets")
+
+-- Create pet dropdown with the correct format
+local selectedPet = "Neon Guardian" -- Default selection
+local petDropdown = pets:AddDropdown("Select Pets", function(text)
+    selectedPet = text
+    print("Pets Selection: " .. text)
+end)
+
+-- Add pet options
+petDropdown:Add("DRAGON: Nebula Skystorm")
+petDropdown:Add("Blue Birdie")
+petDropdown:Add("Blue Bunny")
+petDropdown:Add("Blue Firecaster")
+petDropdown:Add("Blue Pheonix")
+petDropdown:Add("Crimson Falcon")
+petDropdown:Add("Cybernetic Showdown Dragon")
+petDropdown:Add("Dark Golem")
+
+-- Auto open pet toggle
+pets:AddSwitch("Auto Open Pet", function(bool)
+    _G.AutoHatchPet = bool
+    
+    if bool then
+        spawn(function()
+            while _G.AutoHatchPet and selectedPet ~= "" do
+                local petToOpen = ReplicatedStorage.cPetShopFolder:FindFirstChild(selectedPet)
+                if petToOpen then
+                    ReplicatedStorage.cPetShopRemote:InvokeServer(petToOpen)
+                end
+                task.wait(1)
+            end
+        end)
+    end
+end)
+
 local _Teleport = window:AddTab('Teleport')
 
 -- Global Teleport Selection Variables
