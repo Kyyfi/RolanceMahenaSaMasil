@@ -5,7 +5,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 -- Dynamically generate the window title with a welcome message
-local windowTitle = "Kyo~Private| Welcome " .. LocalPlayer.DisplayName
+local windowTitle = "TANG INA MO!| Welcome " .. LocalPlayer.DisplayName
 
 local window = library:AddWindow(windowTitle, {
     main_color = Color3.fromRGB(41, 74, 122),
@@ -568,6 +568,7 @@ local crystalDropdown = mainTab:AddDropdown("Select Crystal", function(choice)
 end)
 
 -- Populating dropdown items following strict Elerium structural formats
+crystalDropdown:Add("Ultra Shockwave Crystal")
 crystalDropdown:Add("Secret Void Crystal")
 crystalDropdown:Add("Jungle Crystal")
 crystalDropdown:Add("Galaxy Oracle Crystal")
@@ -604,7 +605,7 @@ end)
 mainTab:AddLabel("Auto Sell")
 
 -- The specific sellPet remote script wrapped inside an AddSwitch loop
-mainTab:AddSwitch("Auto Sell Dual Dynasty Dogs", function(state)
+mainTab:AddSwitch("Auto Sell Corrupted Elements Hydra", function(state)
     getgenv().AutoSell = state
     
     -- When the switch is turned ON, start a repeating loop
@@ -612,7 +613,7 @@ mainTab:AddSwitch("Auto Sell Dual Dynasty Dogs", function(state)
         while getgenv().AutoSell do
             local args = {
                 [1] = "sellPet",
-                [2] = "Dual Dynasty Dogs"
+                [2] = "Corrupted Elements Hydra"
             }
             local remote = game:GetService("ReplicatedStorage"):WaitForChild("rEvents", 3):WaitForChild("sellPetEvent", 3)
             
@@ -627,7 +628,7 @@ mainTab:AddSwitch("Auto Sell Dual Dynasty Dogs", function(state)
 end)
 
 -- The specific sellPet remote script wrapped inside an AddSwitch loop
-mainTab:AddSwitch("Auto Sell Dual Chaos Birdies", function(state)
+mainTab:AddSwitch("Auto Sell Dual Destiny Shadow Dragon", function(state)
     getgenv().AutoSell = state
     
     -- When the switch is turned ON, start a repeating loop
@@ -635,7 +636,7 @@ mainTab:AddSwitch("Auto Sell Dual Chaos Birdies", function(state)
         while getgenv().AutoSell do
             local args = {
                 [1] = "sellPet",
-                [2] = "Dual Chaos Birdies"
+                [2] = "Dual Destiny Shadow Dragon"
             }
             local remote = game:GetService("ReplicatedStorage"):WaitForChild("rEvents", 3):WaitForChild("sellPetEvent", 3)
             
