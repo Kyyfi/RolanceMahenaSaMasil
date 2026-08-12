@@ -2,7 +2,17 @@ local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/IVRzH
 
 -- Make sure the Players service is available
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+
+local localPlayer = Players.LocalPlayer
+local username = localPlayer.Name
+local userId = localPlayer.UserId
+
+local Player = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+local muscleEvent = Player:WaitForChild("muscleEvent")
+local antiAFKConnection
 
 -- Dynamically generate the window title with a welcome message
 local windowTitle = "Rolance Walang Bitaw Supot | Welcome Sayo Tangina Ka" .. LocalPlayer.DisplayName
@@ -655,7 +665,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 pets:AddLabel("Pets")
 
 -- Create pet dropdown with the correct format
-local selectedPet = "Neon Guardian" -- Default selection
+local selectedPet = "DRAGON: Nebula Skystorm" -- Default selection
 local petDropdown = pets:AddDropdown("Select Pets", function(text)
     selectedPet = text
     print("Pets Selection: " .. text)
