@@ -3,16 +3,7 @@ local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/IVRzH
 -- Make sure the Players service is available
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
-
 local localPlayer = Players.LocalPlayer
-local username = localPlayer.Name
-local userId = localPlayer.UserId
-
-local Player = Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualUser = game:GetService("VirtualUser")
-local muscleEvent = Player:WaitForChild("muscleEvent")
-local antiAFKConnection
 
 -- Dynamically generate the window title with a welcome message
 local windowTitle = "Rolance Walang Bitaw Supot | Welcome Sayo Tangina Ka" .. LocalPlayer.DisplayName
@@ -109,6 +100,12 @@ local mainTab = window:AddTab("Farm")
 local Players = game:GetService("Players")
 local VirtualUser = game:GetService("VirtualUser")
 local CoreGui = game:GetService("CoreGui")
+local username = localPlayer.Name
+local userId = localPlayer.UserId
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+local muscleEvent = Player:WaitForChild("muscleEvent")
 
 local player = Players.LocalPlayer
 local AntiAFKConnection = nil
