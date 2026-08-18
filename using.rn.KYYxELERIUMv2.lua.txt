@@ -9,14 +9,19 @@ local Win = Library.new({
     CanResize      = false
 })
 
-local Player     = game:GetService("Players").LocalPlayer
-local RS         = game:GetService("ReplicatedStorage")
-local Vim        = game:GetService("VirtualInputManager")
-local muscleEvent= Player:WaitForChild("muscleEvent")
-local ls         = Player:WaitForChild("leaderstats")
-local rebirths   = ls:WaitForChild("Rebirths")
-local strength   = ls:WaitForChild("Strength")
-local durability = Player:WaitForChild("Durability")
+local Players            = game:GetService("Players")
+local Player             = Players.LocalPlayer
+local RS                 = game:GetService("ReplicatedStorage")
+local Vim                = game:GetService("VirtualInputManager")
+local UIS                = game:GetService("UserInputService")
+local RunService         = game:GetService("RunService")
+local GuiService         = game:GetService("GuiService")
+
+local muscleEvent        = Player:WaitForChild("muscleEvent")
+local ls                 = Player:WaitForChild("leaderstats")
+local rebirths           = ls:WaitForChild("Rebirths")
+local strength           = ls:WaitForChild("Strength")
+local durability         = Player:WaitForChild("Durability")
 
 -------------------- helpers --------------------
 local function fmt(n)
@@ -73,22 +78,7 @@ local function tpJungleSquat()
     Vim:SendKeyEvent(false,Enum.KeyCode.E,false,game)
 end
 
--- PASTE INTO COMMAND BAR OR NEW SCRIPT
-local lock = false
-local con  = nil
-local saved = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
-
-con = game:GetService("RunService").Heartbeat:Connect(function()
-    if not lock then con:Disconnect() return end
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = saved
-end)
-
--- turn on/off by typing these two lines in console
--- lock = true     -- freeze
--- lock = false    -- release
-
 local function antiLag()
-    -- NO GUI destruction
     for _,v in pairs(workspace:GetDescendants()) do
         if v:IsA("ParticleEmitter") or v:IsA("PointLight") or v:IsA("SpotLight") or v:IsA("SurfaceLight") then
             v:Destroy()
@@ -102,16 +92,39 @@ local function antiLag()
     l.Ambient=Color3.new(0,0,0); l.FogColor=Color3.new(0,0,0); l.FogEnd=100
 end
 
--------------------- hide-frames helper --------------------
-local frameBlockList = {"strengthFrame","durabilityFrame","agilityFrame"}
-local function hideFrames()
-    for _,name in ipairs(frameBlockList) do
-        local f = RS:FindFirstChild(name)
-        if f and f:IsA("GuiObject") then f.Visible = false end
+-------------------- FIXED hide-frames helper --------------------
+local frameBlockList = {"strengthFrame", "durabilityFrame", "agilityFrame"}
+local hideFramesEnabled = false
+
+local function updateAllFrames(state)
+    local pGui = Player:FindFirstChild("PlayerGui")
+    if not pGui then return end
+    for _, desc in ipairs(pGui:GetDescendants()) do
+        if desc:IsA("GuiObject") and table.find(frameBlockList, desc.Name) then
+            desc.Visible = not state
+        end
     end
 end
-RS.ChildAdded:Connect(function(c)
-    if table.find(frameBlockList,c.Name) and c:IsA("GuiObject") then c.Visible = false end
+
+local function hookPlayerGui(pGui)
+    pGui.DescendantAdded:Connect(function(desc)
+        if hideFramesEnabled and desc:IsA("GuiObject") and table.find(frameBlockList, desc.Name) then
+            task.wait()
+            desc.Visible = false
+        end
+    end)
+end
+
+if Player:FindFirstChild("PlayerGui") then
+    hookPlayerGui(Player.PlayerGui)
+end
+Player.CharacterAdded:Connect(function()
+    local pGui = Player:WaitForChild("PlayerGui")
+    hookPlayerGui(pGui)
+    if hideFramesEnabled then
+        task.wait(0.5)
+        updateAllFrames(true)
+    end
 end)
 
 -------------------- window / tabs --------------------
@@ -191,15 +204,10 @@ RebirthTab:AddToggle("Fast Rebirth",false,function(v)
     end
 end)
 
--- Hide-Frames toggle
-RebirthTab:AddToggle("Hide Frames",false,function(s)
-    if s then hideFrames() end
-end)
-
--- Anti-AFK button (rebirth tab)
-local rebAntiAfkEnabled=false
-RebirthTab:AddButton("Anti AFK",function()
-    rebAntiAfkEnabled=true
+-- Hide-Frames toggle (Rebirth Tab)
+RebirthTab:AddToggle("Hide Frames", false, function(s)
+    hideFramesEnabled = s
+    updateAllFrames(s)
 end)
 
 RebirthTab:AddButton("Equip 8× Swift Samurai",function() equipEight("Swift Samurai") end)
@@ -223,14 +231,13 @@ local function startLock()
     local root = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
     if not root then return end
     savedPos = root.CFrame
-    root.Anchored = true          -- try anchor first (instant freeze on many gym games)
+    root.Anchored = true
 
-    -- fallback teleport loop if anchor gets overridden
     lockConn = RunService.Heartbeat:Connect(function()
         local r = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
         if r then
             r.Anchored = true
-            r.CFrame = savedPos   -- still attempt CFrame every frame
+            r.CFrame = savedPos
         end
     end)
 end
@@ -240,8 +247,7 @@ local function updatePosLock(state)
     if state then startLock() else stopLock() end
 end
 
--- respawn support
-Player.CharacterAdded:Connect(function(char)
+Player.CharacterAdded:Connect(function()
     if lockEnabled then
         stopLock()
         task.wait(.2)
@@ -249,7 +255,6 @@ Player.CharacterAdded:Connect(function(char)
     end
 end)
 
--- UI toggle
 RebirthTab:AddToggle("Lock 69 Position", false, updatePosLock)
 RebirthTab:AddButton("TP Jungle Lift",tpJungleLift)
 
@@ -281,7 +286,6 @@ local function updateStrDisp()
     strTimeLbl.Text = string.format("%dd %dh %dm %ds – %s",d,h,m,s,strRun and "Running" or "Paused")
 end
 
--- fast rep loop
 local repsPerTick=20
 local function getPing()
     local st=game:GetService("Stats")
@@ -313,15 +317,10 @@ StrengthTab:AddToggle("Fast Strength",false,function(v)
     end
 end)
 
--- Hide-Frames toggle
-StrengthTab:AddToggle("Hide Frames",false,function(s)
-    if s then hideFrames() end
-end)
-
--- Anti-AFK button (strength tab)
-local strAntiAfkEnabled=false
-StrengthTab:AddButton("Anti AFK",function()
-    strAntiAfkEnabled=true
+-- Hide-Frames toggle (Strength Tab)
+StrengthTab:AddToggle("Hide Frames", false, function(s)
+    hideFramesEnabled = s
+    updateAllFrames(s)
 end)
 
 StrengthTab:AddButton("Equip 8× Swift Samurai",function() equipEight("Swift Samurai") end)
@@ -344,12 +343,10 @@ StrengthTab:AddToggle("Auto Protein Egg",false,function(s) eggRunning2=s; if s t
 StrengthTab:AddToggle("Auto Tropical Shake",false,function(s) shakeRunning=s; if s then toolActivate("Tropical Shake","tropicalShake") end end)
 
 -------------------- stat loops --------------------
--- rebirth timer
 task.spawn(function()
     while true do updateRebDisp(); task.wait(0.1) end
 end)
 
--- strength/durability timer + pace
 task.spawn(function()
     local lastCalc=tick()
     while true do
@@ -390,19 +387,12 @@ task.spawn(function()
 end)
 
 --------------------------------------------------------
---  ANTI-AFK  (universal, shared by Rebirth & Strength)
+--  ANTI-AFK
 --------------------------------------------------------
-local Players            = game:GetService("Players")
-local UIS                = game:GetService("UserInputService")
-local GuiService         = game:GetService("GuiService")
-local RunService         = game:GetService("RunService")
+local rebAntiAfkEnabled  = false
+local strAntiAfkEnabled  = false
 
-local player             = Players.LocalPlayer
-local rebAntiAfkEnabled  = false   -- toggled in Rebirth tab
-local strAntiAfkEnabled  = false   -- toggled in Strength tab
-
--- build the overlay exactly like you had it
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local gui = Instance.new("ScreenGui", Player:WaitForChild("PlayerGui"))
 gui.Name = "AntiAFKOverlay"
 gui.ResetOnSpawn = false
 
@@ -428,7 +418,6 @@ timerLabel.Text = "00:00:00"
 
 local startTime = tick()
 
--- running timer
 task.spawn(function()
     while true do
         local elapsed = tick() - startTime
@@ -440,7 +429,6 @@ task.spawn(function()
     end
 end)
 
--- fade in/out animation
 task.spawn(function()
     while true do
         for i = 0, 1, 0.01 do
@@ -458,50 +446,38 @@ task.spawn(function()
     end
 end)
 
--- ACTUAL ANTI-AFK INPUT SIMULATION
 local function simulateActivity()
-    -- Simulate random key presses every 30-60 seconds
     local keys = {Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D, Enum.KeyCode.Space}
     local randomKey = keys[math.random(1, #keys)]
     
-    -- Simulate key press
-    UIS:SendKeyEvent(true, randomKey, false, game)
+    Vim:SendKeyEvent(true, randomKey, false, game)
     task.wait(0.1)
-    UIS:SendKeyEvent(false, randomKey, false, game)
+    Vim:SendKeyEvent(false, randomKey, false, game)
     
-    -- Simulate mouse movement
-    local centerX, centerY = 500, 300
-    local deltaX, deltaY = math.random(-50, 50), math.random(-50, 50)
-    
-    -- Move mouse slightly
-    mousemoverel(deltaX, deltaY)
-    task.wait(0.1)
-    mousemoverel(-deltaX, -deltaY)
+    if mousemoverel then
+        local deltaX, deltaY = math.random(-50, 50), math.random(-50, 50)
+        mousemoverel(deltaX, deltaY)
+        task.wait(0.1)
+        mousemoverel(-deltaX, -deltaY)
+    end
 end
 
--- Main anti-afk loop
 local antiAfkLoop = nil
 local function startAntiAfk()
     if antiAfkLoop then antiAfkLoop:Disconnect() end
-    
     antiAfkLoop = RunService.Heartbeat:Connect(function()
-        if (rebAntiAfkEnabled or strAntiAfkEnabled) then
-            -- Simulate activity every 30-45 seconds randomly
+        if rebAntiAfkEnabled or strAntiAfkEnabled then
             if tick() % 40 < 1 then
                 simulateActivity()
             end
         end
     end)
 end
-
--- Initialize anti-afk
 startAntiAfk()
 
--- Also simulate periodic camera movement
 task.spawn(function()
     while true do
         if rebAntiAfkEnabled or strAntiAfkEnabled then
-            -- Small camera rotation
             local camera = workspace.CurrentCamera
             if camera then
                 local originalCFrame = camera.CFrame
@@ -515,21 +491,17 @@ task.spawn(function()
     end
 end)
 
--- Update the button functions to properly enable anti-afk
--- Rebirth tab Anti AFK button
-RebirthTab:RemoveButton("Anti AFK") -- Remove old button
-RebirthTab:AddButton("Anti AFK",function()
+-- Anti-AFK Buttons
+RebirthTab:AddButton("Anti AFK", function()
     rebAntiAfkEnabled = true
-    strAntiAfkEnabled = false -- Only enable for rebirth tab
+    strAntiAfkEnabled = false
     textLabel.Text = "ANTI AFK - REBIRTH"
     textLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
 end)
 
--- Strength tab Anti AFK button  
-StrengthTab:RemoveButton("Anti AFK") -- Remove old button
-StrengthTab:AddButton("Anti AFK",function()
+StrengthTab:AddButton("Anti AFK", function()
     strAntiAfkEnabled = true
-    rebAntiAfkEnabled = false -- Only enable for strength tab
+    rebAntiAfkEnabled = false
     textLabel.Text = "ANTI AFK - STRENGTH"
     textLabel.TextColor3 = Color3.fromRGB(255, 150, 50)
 end)
