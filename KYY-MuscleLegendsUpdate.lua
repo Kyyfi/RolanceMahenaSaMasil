@@ -273,7 +273,7 @@ local function createWhitelistGUI()
                 
                 -- Execute your main script here
                 pcall(function()
-                    loadstring(game:HttpGet(https://raw.githubusercontent.com/Kyyfi/RolanceMahenaSaMasil/refs/heads/main/KYYY-Loader.lua))()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/Kyyfi/RolanceMahenaSaMasil/refs/heads/main/KYYY-Loader.lua"))()
                 end)
                 
                 screenGui:Destroy()
