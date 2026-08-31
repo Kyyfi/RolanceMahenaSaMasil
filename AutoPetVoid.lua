@@ -1,4 +1,4 @@
---[[EleriumV2xKYY (ver.69)]]--
+--[[EleriumV2xKYY (ver.69) - Auto Evolve Updated]]--
 local Library=loadstring(game:HttpGet("https://raw.githubusercontent.com/Kyypie69/Library.UI/refs/heads/main/KYY.luau"))()
 local Win=Library.new({MainColor=Color3.fromRGB(138,43,226),ToggleKey=Enum.KeyCode.Insert,MinSize=Vector2.new(450,320),CanResize=false})
 local Player=game:GetService("Players").LocalPlayer
@@ -12,6 +12,8 @@ local durability=Player:WaitForChild("Durability")
 
 -- Remote References
 local openCrystalRemote = RS:WaitForChild("rEvents"):WaitForChild("openCrystalRemote")
+local petEvolveEvent = RS:WaitForChild("rEvents"):WaitForChild("petEvolveEvent")
+local evolvePowerUpEvent = RS:WaitForChild("rEvents"):WaitForChild("evolvePowerUpEvent")
 
 -- Helper functions
 local function fmt(n)
@@ -1062,7 +1064,7 @@ task.spawn(function()
                 end
                 if #durHist>=2 then
                     local d=durHist[#durHist].v-durHist[1].v
-                    local ps=d/calcInt
+                    local ps=d/durHist[1].t or calcInt
                     durPaceLbl.Text=string.format("Dur Pace: %s /h  |  %s /d  |  %s /w",fmt(ps*3600),fmt(ps*86400),fmt(ps*604800))
                 end
                 local tot=strElapsed+(now-strStart)
@@ -1196,7 +1198,6 @@ titleLabel.TextStrokeTransparency=0
 titleLabel.TextStrokeColor3=Color3.fromRGB(0,100,200)
 titleLabel.Parent=mainFrame
 
--- Add separators and other labels...
 local timerLabel=Instance.new("TextLabel")
 timerLabel.Size=UDim2.new(1,0,0,20)
 timerLabel.Position=UDim2.new(0,0,0,27)
@@ -1687,7 +1688,6 @@ ShopTab:AddToggle("Auto 3x Get Twin Element Birdies", false, function(Value)
     task.spawn(function()
         while autoTwinBirdies do
             pcall(function()
-                -- Sends 3 as quantity and 3x hatch flag to open 3 crystals at once
                 openCrystalRemote:InvokeServer("openCrystal", "Weakness Crystal", 3, true)
             end)
             task.wait(0.1)
@@ -1719,11 +1719,11 @@ ShopTab:AddToggle("Auto Buy Selected Crystal", false, function(Value)
     end)
 end)
 
+-- Auto Evolve Pets & Power-Ups System
 local autoEvolvePets = false
 ShopTab:AddToggle("Auto Evolve Pets", false, function(Value)
     autoEvolvePets = Value
     task.spawn(function()
-        local evolveRemote = RS:WaitForChild("rEvents"):WaitForChild("evolvePetItemServer")
         while autoEvolvePets do
             pcall(function()
                 local petsFolder = Player:FindFirstChild("petsFolder")
@@ -1733,8 +1733,22 @@ ShopTab:AddToggle("Auto Evolve Pets", false, function(Value)
                             local petCounts = {}
                             for _, pet in pairs(folder:GetChildren()) do
                                 petCounts[pet.Name] = (petCounts[pet.Name] or 0) + 1
+                                -- If you have 10 or more of the same pet, fire the evolve remotes
                                 if petCounts[pet.Name] >= 10 then
-                                    evolveRemote:InvokeServer("evolvePet", pet.Name)
+                                    -- Primary pet evolve remote call
+                                    if petEvolveEvent:IsA("RemoteEvent") then
+                                        petEvolveEvent:FireServer("evolvePet", pet.Name)
+                                    elseif petEvolveEvent:IsA("RemoteFunction") then
+                                        petEvolveEvent:InvokeServer("evolvePet", pet.Name)
+                                    end
+
+                                    -- Optional/secondary power-up evolve Remote call
+                                    if evolvePowerUpEvent:IsA("RemoteEvent") then
+                                        evolvePowerUpEvent:FireServer("evolvePet", pet.Name)
+                                    elseif evolvePowerUpEvent:IsA("RemoteFunction") then
+                                        evolvePowerUpEvent:InvokeServer("evolvePet", pet.Name)
+                                    end
+
                                     petCounts[pet.Name] = 0
                                     task.wait(0.2)
                                 end
