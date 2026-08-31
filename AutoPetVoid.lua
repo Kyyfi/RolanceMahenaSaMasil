@@ -10,6 +10,9 @@ local rebirths=ls:WaitForChild("Rebirths")
 local strength=ls:WaitForChild("Strength")
 local durability=Player:WaitForChild("Durability")
 
+-- Remote References
+local openCrystalRemote = RS:WaitForChild("rEvents"):WaitForChild("openCrystalRemote")
+
 -- Helper functions
 local function fmt(n)
     n=math.abs(n)
@@ -1676,41 +1679,44 @@ TeleportTab:AddButton("Legends Gym",function()
     end
 end)
 
--- Shop Tab
-ShopTab:AddLabel("Pet Shop")
-local selectedPet="Twin Element Birdies"
-local petOptions={"Twin Element Birdies","Inner Darkness Hydra","GLITCH: Awakened Nighthunter","Crimson Falcon","Cybernetic Showdown Dragon","Dark Golem","Dark Legends Manticore","Eternal Strike Leviathan","Frostwave Legends Penguin","Gold Warrior","Golden Viking","Infernal Dragon","Muscle Sensei"}
+ShopTab:AddLabel("Crystal / Pet Shop")
 
-local petDropdown=ShopTab:AddDropdown("Select Pet",petOptions,function(Value)
-    selectedPet=Value
-end)
-
-ShopTab:AddToggle("Auto Buy Pet",false,function(Value)
-    while Value and selectedPet do
-        local petToOpen=game:GetService("ReplicatedStorage").cPetShopFolder:FindFirstChild(selectedPet)
-        if petToOpen then
-            game:GetService("ReplicatedStorage").cPetShopRemote:InvokeServer(petToOpen)
+local autoTwinBirdies = false
+ShopTab:AddToggle("Auto 3x Get Twin Element Birdies", false, function(Value)
+    autoTwinBirdies = Value
+    task.spawn(function()
+        while autoTwinBirdies do
+            pcall(function()
+                -- Sends 3 as quantity and 3x hatch flag to open 3 crystals at once
+                openCrystalRemote:InvokeServer("openCrystal", "Weakness Crystal", 3, true)
+            end)
+            task.wait(0.1)
         end
-        task.wait(0.1)
-    end
+    end)
 end)
 
-ShopTab:AddLabel("Aura Shop")
-local selectedAura="Entropic Blast"
-local auraOptions={"Entropic Blast","Muscle King","Astral Electro","Azure Tundra","Dark Electro","Dark Lightning","Dark Storm","Electro","Enchanted Mirage","Eternal Megastrike","Grand Supernova","Inferno","Lightning","Power Lightning","Purple Nova","Supernova"}
+local selectedCrystal = "Weakness Crystal"
+local crystalOptions = {
+    "Weakness Crystal",
+    "Sunken Crystal",
+    "Eltrax Crystal"
+}
 
-local auraDropdown=ShopTab:AddDropdown("Select Aura",auraOptions,function(Value)
-    selectedAura=Value
+local crystalDropdown = ShopTab:AddDropdown("Select Crystal", crystalOptions, function(Value)
+    selectedCrystal = Value
 end)
 
-ShopTab:AddToggle("Auto Buy Aura",false,function(Value)
-    while Value and selectedAura do
-        local auraToOpen=game:GetService("ReplicatedStorage").cPetShopFolder:FindFirstChild(selectedAura)
-        if auraToOpen then
-            game:GetService("ReplicatedStorage").cPetShopRemote:InvokeServer(auraToOpen)
+local autoBuyCrystal = false
+ShopTab:AddToggle("Auto Buy Selected Crystal", false, function(Value)
+    autoBuyCrystal = Value
+    task.spawn(function()
+        while autoBuyCrystal and selectedCrystal do
+            pcall(function()
+                openCrystalRemote:InvokeServer("openCrystal", selectedCrystal)
+            end)
+            task.wait(0.1)
         end
-        task.wait(0.1)
-    end
+    end)
 end)
 
 -- Spectate & Stats Tab
