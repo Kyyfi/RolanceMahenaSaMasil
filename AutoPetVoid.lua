@@ -1719,6 +1719,35 @@ ShopTab:AddToggle("Auto Buy Selected Crystal", false, function(Value)
     end)
 end)
 
+local autoEvolvePets = false
+ShopTab:AddToggle("Auto Evolve Pets", false, function(Value)
+    autoEvolvePets = Value
+    task.spawn(function()
+        local evolveRemote = RS:WaitForChild("rEvents"):WaitForChild("evolvePetItemServer")
+        while autoEvolvePets do
+            pcall(function()
+                local petsFolder = Player:FindFirstChild("petsFolder")
+                if petsFolder then
+                    for _, folder in pairs(petsFolder:GetChildren()) do
+                        if folder:IsA("Folder") then
+                            local petCounts = {}
+                            for _, pet in pairs(folder:GetChildren()) do
+                                petCounts[pet.Name] = (petCounts[pet.Name] or 0) + 1
+                                if petCounts[pet.Name] >= 10 then
+                                    evolveRemote:InvokeServer("evolvePet", pet.Name)
+                                    petCounts[pet.Name] = 0
+                                    task.wait(0.2)
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+            task.wait(1)
+        end
+    end)
+end)
+
 -- Spectate & Stats Tab
 local playerToInspect=nil
 local selectedPlayerToSpectate=nil
