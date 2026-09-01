@@ -1683,12 +1683,12 @@ end)
 ShopTab:AddLabel("Crystal / Pet Shop")
 
 local autoTwinBirdies = false
-ShopTab:AddToggle("Auto 3x Get Twin Element Birdies", false, function(Value)
+ShopTab:AddToggle("Auto 3x Get Eltrax Crystal (BETA)", false, function(Value)
     autoTwinBirdies = Value
     task.spawn(function()
         while autoTwinBirdies do
             pcall(function()
-                openCrystalRemote:InvokeServer("openCrystal", "Weakness Crystal", 3, true)
+                openCrystalRemote:InvokeServer("openCrystal", "Eltrax Crystal", 3, true)
             end)
             task.wait(0.1)
         end
@@ -1699,6 +1699,8 @@ local selectedCrystal = "Weakness Crystal"
 local crystalOptions = {
     "Weakness Crystal",
     "Sunken Crystal",
+    "Infernal Crystal",
+    "Godly Crystal",
     "Eltrax Crystal"
 }
 
