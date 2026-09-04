@@ -1683,12 +1683,12 @@ end)
 ShopTab:AddLabel("Crystal / Pet Shop")
 
 local autoTwinBirdies = false
-ShopTab:AddToggle("Auto 3x Get Lost Crystal (BETA)", false, function(Value)
+ShopTab:AddToggle("Auto 3x Get YingYang Crystal (BETA)", false, function(Value)
     autoTwinBirdies = Value
     task.spawn(function()
         while autoTwinBirdies do
             pcall(function()
-                openCrystalRemote:InvokeServer("openCrystal", "Lost Crystal", 3, true)
+                openCrystalRemote:InvokeServer("openCrystal", "YingYang Crystal", 3, true)
             end)
             task.wait(0.1)
         end
@@ -1699,8 +1699,8 @@ local selectedCrystal = "Weakness Crystal"
 local crystalOptions = {
     "Weakness Crystal",
     "Lost Crystal",
-    "Infernal Crystal",
-    "Godly Crystal",
+    "YingYang Crystal",
+    "Fixsuming Crystal",
     "Eltrax Crystal"
 }
 
